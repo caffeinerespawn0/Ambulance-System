@@ -1,10 +1,12 @@
 #pragma once
 #include "graph.h"
 
+const double INF = 1e18;
+
 struct PathResult {
-    vector<double> dist;   // min travel time to every node
-    vector<int> prev;      // predecessor for path reconstruction
+    vector<double> dist;
+    vector<int> prev;
 };
 
-PathResult dijkstra(const Graph& g, int src);
+PathResult dijkstra(const Graph& g, int src, bool live = true);
 vector<int> buildPath(const PathResult& r, int src, int dst);

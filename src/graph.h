@@ -21,7 +21,7 @@ class Node{
     double getY() const{
         return y; 
     }
-    const string& getName(){
+    const string& getName() const{
         return name; 
     }
 };
@@ -30,7 +30,7 @@ class Edge{
     double length; //standard km 
     double speed;  //standard km/h
     double congestion; //1.0=free flow, 2.0=slow 
-    bool blocked; 
+    bool blocked;  
     public: 
     Edge(int to,double length, double speed):to(to),length(length),speed(speed),congestion(1.0),blocked(false){}; 
     //getter funcs 
@@ -57,6 +57,12 @@ class Edge{
         //result: minutes (dijkstra's weight)
         return (length/speed)*(60.0)*congestion; 
     }
+    double baseTravelTime()const{
+        return (length/speed)*(60.0); 
+    }
+    int getTo() const{
+        return to; 
+    }
 }; 
 class Graph{
     vector<Node> nodes; 
@@ -66,7 +72,7 @@ class Graph{
     void addNode(const Node& n); 
     void addEdge(int u, int v, double len, double spd, bool oneWay); 
     int size() const{
-        return node.size(); 
+        return nodes.size(); 
     }
     const Node& getNode(int id) const {
         return nodes[id]; 

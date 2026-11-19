@@ -3,7 +3,7 @@
 #include"heap.h"
 using namespace std;
 
-const double SEVERITY_WEIGHT=10.0; //points per seveirty rate 
+const double SEVERITY_WEIGHT=10.0; //points per severity rate 
 const double AGING_RATE=1.0; //points lost per minute of arrival delay 
 
 class Incident {
