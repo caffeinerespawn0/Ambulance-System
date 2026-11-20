@@ -32,6 +32,7 @@ class Edge{
     double congestion; //1.0=free flow, 2.0=slow 
     bool blocked;  
     public: 
+    //by default: free flow 
     Edge(int to,double length, double speed):to(to),length(length),speed(speed),congestion(1.0),blocked(false){}; 
     //getter funcs 
     double getLength() const{
@@ -57,7 +58,7 @@ class Edge{
         //result: minutes (dijkstra's weight)
         return (length/speed)*(60.0)*congestion; 
     }
-    double baseTravelTime()const{
+    double baseTravelTime()const{   //w/out congestion 
         return (length/speed)*(60.0); 
     }
     int getTo() const{
@@ -78,7 +79,7 @@ class Graph{
         return nodes[id]; 
     }
     const vector<Edge>& neighbours(int u)const{
-        return adj[u]; //returning the neighbours of u 
+        return adj[u]; //returning the neighbours of u (all the neighbours of the node u)
     }
     bool setBlocked(int u, int v, bool state, bool bothWays=false); 
     bool setCongestion(int u, int v, double factor); 

@@ -7,7 +7,10 @@ int main() {
     g.load("data/map.txt");
     g.setCongestion(6, 7, 3.0);                 // Station_2 -> Incident now 3x slower
 
-    vector<Ambulance> fleet = { Ambulance(1, 3), Ambulance(2, 6) };  // Station_1, Station_2
+    vector<Ambulance> fleet = { 
+        Ambulance(1, 3), Ambulance(2, 6)
+    };  // Station_1, Station_2
+    
     Incident inc(1, 7, 5, 0);                   // critical case at Incident_Zone
 
     Dispatcher d;
@@ -16,9 +19,8 @@ int main() {
 
     for (int i = 0; i < 3; i++) {
         DispatchResult r = d.choose(g, fleet, inc, all[i]);
-        cout << names[i] << ": ambulance " << r.ambulanceId
-             << ", ETA " << r.eta << " min, path:";
+        cout << names[i] << ": ambulance " << r.ambulanceId << ", ETA " << r.eta << " min, path:";
         for (int v : r.path) cout << " " << g.getNode(v).getName();
-        cout << "\n";
+        cout <<endl;
     }
 } 
