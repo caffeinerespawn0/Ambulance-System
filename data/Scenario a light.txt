@@ -1,0 +1,7 @@
+# A: light traffic. No congestion, no closures. Control case: all strategies should agree.
+ambulance 1 3
+ambulance 2 6
+hospital 0
+incident 0 7 3
+incident 10 2 2
+ 

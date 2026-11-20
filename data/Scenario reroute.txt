@@ -1,0 +1,8 @@
+# One ambulance starts at the hospital. Its best route is 0>3>6>7 (10 min).
+# At t=1 the road 6->7 jams, while it is still on the first road.
+# DYNAMIC notices at the next intersection and switches; the baselines drive into the jam.
+ambulance 1 0
+hospital 0
+incident 0 7 5
+congest 1 6 7 3.0
+ 

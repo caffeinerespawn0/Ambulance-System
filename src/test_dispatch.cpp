@@ -8,10 +8,10 @@ int main() {
     g.setCongestion(6, 7, 3.0);                 // Station_2 -> Incident now 3x slower
 
     vector<Ambulance> fleet = { 
-        Ambulance(1, 3), Ambulance(2, 6)
+        Ambulance(1, 3), Ambulance(2, 6) //1st ambulance: node 3, 2nd ambulance node 6
     };  // Station_1, Station_2
     
-    Incident inc(1, 7, 5, 0);                   // critical case at Incident_Zone
+    Incident inc(1, 7, 5, 0);                   //read as incident 1, node 7, sev 5, arrivaltime 0
 
     Dispatcher d;
     const char* names[] = {"NEAREST_STRAIGHT", "STATIC_SHORTEST", "DYNAMIC"};

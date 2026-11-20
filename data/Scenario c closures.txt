@@ -1,0 +1,7 @@
+# C: a road closes while the ambulance is still on its way.
+# DYNAMIC avoids the dead end at the next intersection; the baselines only react once the road ahead is closed.
+ambulance 1 0
+hospital 0
+incident 0 7 5
+block 2 6 7 0
+ 
