@@ -337,7 +337,7 @@ void restart(Simulation& sim, const Graph& map){
 Font mainFont; 
 void drawText(const char* text,int x,int y,int size,Color color)
 {
-    DrawTextEx(mainFont,text,{(float)x,(float)y},size,1,color);
+    DrawTextEx(mainFont,text,{(float)x,(float)y},size+3,1,color);
 }
 int main(){
     Graph map;
@@ -348,7 +348,7 @@ int main(){
     Simulation sim(map,strategy);
     restart(sim,map);
     InitWindow(SCREEN_W,SCREEN_H,"smart ambulance dispatch");
-    mainFont=LoadFontEx("assets/segoeui.ttf",32,0,250);
+    mainFont=LoadFontEx("assets/segoeui.ttf",48,0,250);
     if(mainFont.texture.id==0)
     {
     cout<<"font failed to load"<<endl;
