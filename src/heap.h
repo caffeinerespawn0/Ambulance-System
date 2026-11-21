@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <algorithm>
 using namespace std;
 struct HeapItem{
     int id; //node number or incident number

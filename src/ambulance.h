@@ -1,6 +1,6 @@
 #pragma once
 enum class AmbStatus { 
-    IDLE, TO_INCIDENT, AT_SCENE, TO_HOSPITAL
+    IDLE, TO_INCIDENT, AT_SCENE, TO_HOSPITAL //four possibilites of an ambulance (declaring separately)
 };
 
 class Ambulance {
@@ -20,7 +20,7 @@ public:
         return status;
     }
     bool isIdle() const{
-        return status == AmbStatus::IDLE;
+        return status == AmbStatus::IDLE; //returns true of idle 
     }
     void setNode(int n) { 
         node = n;

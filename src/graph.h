@@ -4,6 +4,8 @@
 #include<cmath> 
 using namespace std; 
 const double PX_PER_KM=75.0; 
+const double INF=1e18; //meaning no path has been found yet 
+
 class Node{
     int id; 
     double x,y; //coordinates (to plot map)
@@ -84,4 +86,6 @@ class Graph{
     bool setBlocked(int u, int v, bool state, bool bothWays=false); 
     bool setCongestion(int u, int v, double factor); 
     double straightKm(int a, int b) const;
+    void dijkstra(int src, vector<double>& dist, vector<int>& prev, bool useTraffic) const;
+    vector<int> getPath(const vector<int>& prev, int src, int dst) const;
 }; 

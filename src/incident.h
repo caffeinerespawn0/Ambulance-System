@@ -8,8 +8,8 @@ const double AGING_RATE=1.0; //points lost per minute of arrival delay
 
 class Incident {
 int id;
-int node;            // intersection where the emergency is
-int severity;        // 1 (minor) .. 5 (critical)
+int node;            //exact point of emergency 
+int severity;        // 1 minor and 5 is critical
 double arrivalTime;  // simulated minutes
 public:
 Incident() : id(-1), node(-1), severity(1), arrivalTime(0) {}
@@ -20,17 +20,19 @@ int getId() const {
 int getNode() const {
     return node;
     }
-int getSeverity() const {
+int getSeverity()const{
     return severity;
     }
-double getArrivalTime() const {
+double getArrivalTime()const{
      return arrivalTime;
     }
-double key() const {                       // fixed priority key
+double key()const{                       // fixed priority key !!FOR EVERY INCIDENT!!
     return severity * SEVERITY_WEIGHT - AGING_RATE * arrivalTime;
     }
-    // how long it has waited (for display and the metrics later)
-    double waited(double now) const { return now - arrivalTime; }
+// how long it has waited (for display and the metrics later)
+double waited(double now)const{
+    return now - arrivalTime; //time waited
+}
 };
 
 // comp(a, b) == true means "a has LOWER priority than b"

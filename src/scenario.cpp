@@ -23,7 +23,8 @@ bool Scenario::load(const string& file, string& err) {
             int id, node;
             ok = bool(ss >> id >> node);
             if (ok) ambulances.push_back({id, node});
-        } else if (word == "hospital") {
+        } 
+        else if (word == "hospital") {
             int node;
             ok = bool(ss >> node);
             if (ok) hospitals.push_back(node);

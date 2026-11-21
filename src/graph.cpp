@@ -1,6 +1,8 @@
 #include "graph.h"
 #include <fstream>
 #include <iostream>
+#include "heap.h"
+#include<algorithm>
 
 void Graph::addNode(const Node& n) {
     nodes.push_back(n);
@@ -59,4 +61,52 @@ double Graph::straightKm(int a, int b) const {
     double dx = nodes[a].getX() - nodes[b].getX(); //horizontal distance between two nodes
     double dy = nodes[a].getY() - nodes[b].getY(); //vertical distance between two nodes 
     return sqrt(dx*dx + dy*dy) / PX_PER_KM; //distance formula is being used, dividing it to convert pixels into km
+}
+void Graph::dijkstra(int src, vector<double>& dist, vector<int>& prev, bool useTraffic) const{
+    int n=nodes.size();
+    dist.assign(n,INF);
+    prev.assign(n,-1);
+    Heap pq(true); //min heap, closest node on top
+    dist[src]=0;
+    pq.push(src,0);
+    while(!pq.isEmpty()){
+        HeapItem cur=pq.pop();
+        int u=cur.id;
+        double d=cur.priority;
+        if(d>dist[u]){
+            continue; //old entry, a shorter way to u was already found
+        }
+        for(const Edge& e: adj[u]){
+            if(e.isBlocked()){
+                continue;
+            }
+            int v=e.getTo();
+            double w;
+            if(useTraffic){
+                w=e.travelTime();
+            }
+            else{
+                w=e.baseTravelTime();
+            }
+            if(d+w<dist[v]){
+                dist[v]=d+w;
+                prev[v]=u;
+                pq.push(v,d+w);
+            }
+        }
+    }
+}
+
+vector<int> Graph::getPath(const vector<int>& prev, int src, int dst) const{
+    vector<int> path;
+    int v=dst;
+    while(v!=-1){
+        path.push_back(v);
+        v=prev[v];
+    }
+    reverse(path.begin(),path.end());
+    if(path[0]!=src){
+        path.clear(); //dst was never reached
+    }
+    return path;
 }
