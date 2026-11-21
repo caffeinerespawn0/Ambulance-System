@@ -3,6 +3,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include<iostream>
 using namespace std;
 const int SCREEN_W=1100;
 const int SCREEN_H=640;
@@ -30,6 +31,7 @@ void setup(Simulation& sim){
     sim.addEvent(1,SET_TRAFFIC,6,7,3.0);
     sim.addEvent(5,NEW_INCIDENT,2,2,0);
 }
+void drawText(const char* text,int x,int y,int size,Color color);
 void setupScale(const Graph& g){
     double minX=g.getNode(0).getX();
     double maxX=minX;
@@ -129,7 +131,7 @@ void drawRoads(const Graph& g){
             if(back==NULL){
                 drawArrow(a,b,c); //one way road
             }
-            DrawText(TextFormat("%.1f",e.travelTime()),(a.x+b.x)/2+6,(a.y+b.y)/2-18,16,DARKGRAY);
+            drawText(TextFormat("%.1f",e.travelTime()),(a.x+b.x)/2+6,(a.y+b.y)/2-18,16,DARKGRAY);
         }
     }
 }
@@ -170,11 +172,11 @@ void drawNodes(const Simulation& sim){
         Vector2 p=position(g,n);
         DrawCircleV(p,20,c);
         DrawCircleLines(p.x,p.y,20,BLACK);
-        DrawText(TextFormat("%d",n),p.x-5,p.y-8,16,BLACK);
+        drawText(TextFormat("%d",n),p.x-5,p.y-8,16,BLACK);
         const char* name=g.getNode(n).getName().c_str();
         int w=MeasureText(name,14);
         DrawRectangle(p.x-w/2-2,p.y+24,w+4,18,Fade(RAYWHITE,0.9));
-        DrawText(name,p.x-w/2,p.y+26,14,DARKGRAY);
+        drawText(name,p.x-w/2,p.y+26,14,DARKGRAY);
     }
 }
 void drawAmbulances(const Simulation& sim){
@@ -194,36 +196,36 @@ void drawAmbulances(const Simulation& sim){
         }
         DrawCircleV(p,14,c);
         DrawCircleLines(p.x,p.y,14,BLACK);
-        DrawText(TextFormat("A%d",a.id),p.x-10,p.y-7,14,WHITE);
+        drawText(TextFormat("A%d",a.id),p.x-10,p.y-7,14,WHITE);
     }
 }
 void drawPanel(Simulation& sim){
     int x=MAP_W+14;
     DrawLine(MAP_W,0,MAP_W,SCREEN_H,LIGHTGRAY);
-    DrawText(TextFormat("strategy: %s",strategyNames[strategy].c_str()),x,14,20,BLACK);
-    DrawText(TextFormat("time %.1f min    reroutes %d",sim.getNow(),sim.getReroutes()),x,42,18,DARKGRAY);
+    drawText(TextFormat("strategy: %s",strategyNames[strategy].c_str()),x,14,20,BLACK);
+    drawText(TextFormat("time %.1f min    reroutes %d",sim.getNow(),sim.getReroutes()),x,42,18,DARKGRAY);
     if(sim.finished()){
-        DrawText("all incidents are done",x,68,18,DARKGREEN);
+        drawText("all incidents are done",x,68,18,DARKGREEN);
     }
     else if(paused){
-        DrawText("paused",x,68,18,MAROON);
+        drawText("paused",x,68,18,MAROON);
     }
     else{
-        DrawText(TextFormat("running, %d steps per second",speed),x,68,18,DARKGREEN);
+        drawText(TextFormat("running, %d steps per second",speed),x,68,18,DARKGREEN);
     }
-    DrawText("space: run / pause     n: next decision",x,96,14,GRAY);
-    DrawText("up / down: speed     d: pause at every decision",x,114,14,GRAY);
-    DrawText("1 nearest   2 static   3 dynamic   r restart",x,132,14,GRAY);
+    drawText("space: run / pause     n: next decision",x,96,14,GRAY);
+    drawText("up / down: speed     d: pause at every decision",x,114,14,GRAY);
+    drawText("1 nearest   2 static   3 dynamic   r restart",x,132,14,GRAY);
     int y=162;
     for(int i=0;i<sim.ambulanceCount();i++){
         const Ambulance& a=sim.getAmbulance(i);
-        DrawText(TextFormat("A%d: %s",a.id,stateNames[a.state].c_str()),x,y,16,ambulanceColors[i%4]);
+        drawText(TextFormat("A%d: %s",a.id,stateNames[a.state].c_str()),x,y,16,ambulanceColors[i%4]);
         y=y+20;
     }
     y=y+12;
     if(decisionLines.size()==0){
-        DrawText("press space to start, or n for the",x,y,16,DARKGRAY);
-        DrawText("next decision",x,y+20,16,DARKGRAY);
+        drawText("press space to start, or n for the",x,y,16,DARKGRAY);
+        drawText("next decision",x,y+20,16,DARKGRAY);
     }
     for(int i=0;i<(int)decisionLines.size();i++){
         Color c=BLACK;
@@ -233,14 +235,14 @@ void drawPanel(Simulation& sim){
         if(decisionLines[i].find("REROUTE")!=string::npos){
             c=RED;
         }
-        DrawText(decisionLines[i].c_str(),x,y,16,c);
+        drawText(decisionLines[i].c_str(),x,y,16,c);
         y=y+22;
     }
     y=SCREEN_H-20-history.size()*18-24;
-    DrawText("recent decisions",x,y,16,BLACK);
+    drawText("recent decisions",x,y,16,BLACK);
     for(int i=0;i<(int)history.size();i++){
         y=y+18;
-        DrawText(history[i].c_str(),x,y+6,14,DARKGRAY);
+        drawText(history[i].c_str(),x,y+6,14,DARKGRAY);
     }
 }
 //builds the table of options for ambulance i at the intersection it just reached
@@ -332,6 +334,11 @@ void restart(Simulation& sim, const Graph& map){
     stepTimer=0;
     paused=true;
 }
+Font mainFont; 
+void drawText(const char* text,int x,int y,int size,Color color)
+{
+    DrawTextEx(mainFont,text,{(float)x,(float)y},size,1,color);
+}
 int main(){
     Graph map;
     if(!map.load("data/map.txt")){
@@ -341,6 +348,15 @@ int main(){
     Simulation sim(map,strategy);
     restart(sim,map);
     InitWindow(SCREEN_W,SCREEN_H,"smart ambulance dispatch");
+    mainFont=LoadFontEx("assets/segoeui.ttf",32,0,250);
+    if(mainFont.texture.id==0)
+    {
+    cout<<"font failed to load"<<endl;
+    }
+    else
+    {
+    cout<<"font loaded successfully"<<endl;
+    }
     SetTargetFPS(60);
     while(!WindowShouldClose()){
         if(IsKeyPressed(KEY_SPACE)){
