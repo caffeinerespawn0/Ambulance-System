@@ -78,4 +78,30 @@ class Simulation{
     void step();
     bool finished();
     void run();
+    //read only access for the gui
+    const Graph& getGraph() const{
+        return g;
+    }
+    double getNow() const{
+        return now;
+    }
+    int getReroutes() const{
+        return reroutes;
+    }
+    int ambulanceCount() const{
+        return ambulances.size();
+    }
+    const Ambulance& getAmbulance(int i) const{
+        return ambulances[i];
+    }
+    int incidentCount() const{
+        return incidents.size();
+    }
+    const Incident& getIncident(int i) const{
+        return incidents[i];
+    }
+    const vector<int>& getHospitals() const{
+        return hospitals;
+    }
+
 };
