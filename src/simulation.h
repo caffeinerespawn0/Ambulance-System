@@ -19,17 +19,28 @@ const int CLOSE_ROAD=2; //a to b
 const int OPEN_ROAD=3; //a to b
 const int SET_TRAFFIC=4; //a to b, value=congestion factor
 const double SEVERITY_WEIGHT=10.0;
+const double SCENE_TIME=5.0; //minutes the ambulance stays with the patient
+const double TICK=0.1; //minutes the clock moves in one step
 struct Ambulance{
     int id;
-    int node; //where it is now
+    int node; //last intersection it was at
     int state;
     int incident; //index of the incident it is serving, -1 if none
+    int target; //node it is heading to (the incident, then a hospital)
+    vector<int> route; //planned route, route[0] is the node it is at
+    int nextNode; //end of the road it is driving on, -1 if standing at an intersection
+    double timeLeft; //minutes left on the current road
+    double roadTime; //minutes the current road takes in total
+    double sceneLeft; //minutes left at the scene
+    bool stuck; //true while there is no open route
 };
 struct Incident{
     int node;
     int severity; //1 (minor) to 5 (critical)
     double arrivalTime;
     double dispatchTime; //-1 until an ambulance is sent
+    double reachTime; //-1 until an ambulance arrives
+    double deliverTime; //-1 until the patient is at a hospital
     int ambulanceId; //-1 until an ambulance is sent
 };
 struct Event{
@@ -45,15 +56,26 @@ class Simulation{
     vector<Ambulance> ambulances;
     vector<Incident> incidents;
     vector<Event> events; //added in time order
+    vector<int> hospitals;
     Heap waiting; //max heap of waiting incidents, id is the index in incidents
     int nextEvent;
+    int ticks;
     double now;
+    int reroutes;
     void showDistances(int index);
     int chooseAmbulance(int index, double& eta);
+    void arrive(int a);
+    void decideNextRoad(int a);
+    void goToHospital(int a);
+    void moveAmbulances();
     public:
     Simulation(const Graph& map, int s);
     void addAmbulance(int node);
+    void addHospital(int node);
     void addEvent(double time, int type, int a, int b, double value);
     void processEvents(double upTo);
     void assignAmbulances();
+    void step();
+    bool finished();
+    void run();
 };
