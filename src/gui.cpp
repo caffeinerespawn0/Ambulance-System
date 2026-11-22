@@ -20,17 +20,11 @@ bool paused=true;
 bool pauseAtDecision=true;
 int speed=20; //simulation steps per second
 int strategy=DYNAMIC;
+int scenario=5; //1 to 5, see loadScenario in simulation.cpp
 double stepTimer=0;
 string strategyNames[4]={"","nearest","static route","dynamic"};
 string stateNames[4]={"idle","going to the incident","at the scene","going to the hospital"};
 Color ambulanceColors[4]={BLUE,MAROON,DARKGREEN,PURPLE};
-void setup(Simulation& sim){
-    sim.addAmbulance(0);
-    sim.addHospital(0);
-    sim.addEvent(0,NEW_INCIDENT,7,5,0);
-    sim.addEvent(1,SET_TRAFFIC,6,7,3.0);
-    sim.addEvent(5,NEW_INCIDENT,2,2,0);
-}
 void drawText(const char* text,int x,int y,int size,Color color);
 void setupScale(const Graph& g){
     double minX=g.getNode(0).getX();
@@ -216,7 +210,8 @@ void drawPanel(Simulation& sim){
     drawText("space: run / pause     n: next decision",x,96,14,GRAY);
     drawText("up / down: speed     d: pause at every decision",x,114,14,GRAY);
     drawText("1 nearest   2 static   3 dynamic   r restart",x,132,14,GRAY);
-    int y=162;
+    drawText(TextFormat("tab: next scenario, now %d of 5",scenario),x,150,14,GRAY);
+    int y=182;
     for(int i=0;i<sim.ambulanceCount();i++){
         const Ambulance& a=sim.getAmbulance(i);
         drawText(TextFormat("A%d: %s",a.id,stateNames[a.state].c_str()),x,y,16,ambulanceColors[i%4]);
@@ -321,7 +316,7 @@ void runToNextDecision(Simulation& sim){
 }
 void restart(Simulation& sim, const Graph& map){
     sim=Simulation(map,strategy);
-    setup(sim);
+    loadScenario(sim,scenario);
     prevNode.clear();
     prevNext.clear();
     for(int i=0;i<sim.ambulanceCount();i++){
@@ -384,6 +379,10 @@ int main(){
             restart(sim,map);
         }
         if(IsKeyPressed(KEY_R)){
+            restart(sim,map);
+        }
+        if(IsKeyPressed(KEY_TAB)){
+            scenario=scenario%5+1;
             restart(sim,map);
         }
         if(IsKeyPressed(KEY_N) || IsKeyPressed(KEY_RIGHT)){

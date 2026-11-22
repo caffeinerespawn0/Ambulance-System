@@ -1,11 +1,13 @@
 #include "simulation.h"
 #include <iostream>
+#include <chrono>
 using namespace std;
 Simulation::Simulation(const Graph& map, int s):g(map),strategy(s),waiting(false){
     nextEvent=0;
     ticks=0;
     now=0;
     reroutes=0;
+    algoNanos=0;
 }
 void Simulation::addAmbulance(int node){
     Ambulance a;
@@ -102,7 +104,7 @@ int Simulation::chooseAmbulance(int index, double& eta){
             vector<double> dist;
             vector<int> prev;
             //traffic only counts for the dynamic strategy
-            g.dijkstra(ambulances[i].node,dist,prev,strategy==DYNAMIC);
+            runDijkstra(ambulances[i].node,dist,prev,strategy==DYNAMIC);
             score=dist[target];
         }
         if(score<bestScore){
@@ -116,7 +118,7 @@ int Simulation::chooseAmbulance(int index, double& eta){
     //whatever the strategy, the eta is what the road really takes now
     vector<double> dist;
     vector<int> prev;
-    g.dijkstra(ambulances[best].node,dist,prev,true);
+    runDijkstra(ambulances[best].node,dist,prev,true);
     if(dist[target]>=INF){
         return -1;
     }
@@ -188,7 +190,7 @@ void Simulation::decideNextRoad(int a){
     if(replan){
         vector<double> dist;
         vector<int> prev;
-        g.dijkstra(here,dist,prev,strategy==DYNAMIC);
+        runDijkstra(here,dist,prev,strategy==DYNAMIC);
         vector<int> path=g.getPath(prev,here,amb.target);
         if(path.size()<2){
             if(!amb.stuck){
@@ -198,6 +200,9 @@ void Simulation::decideNextRoad(int a){
             return;
         }
         amb.stuck=false;
+        if(strategy==DYNAMIC && planned!=-1 && routeTime(amb.route)<=dist[amb.target]+0.0001){
+            path=amb.route; //the old route is still just as fast, keep it
+        }
         if(planned!=-1 && path[1]!=planned){
             reroutes++;
             cout<<"t="<<now<<": ambulance "<<amb.id<<" reroutes at "<<g.getNode(here).getName()<<": "<<g.getNode(planned).getName()<<" -> "<<g.getNode(path[1]).getName()<<endl;
@@ -225,7 +230,7 @@ void Simulation::goToHospital(int a){
     Ambulance& amb=ambulances[a];
     vector<double> dist;
     vector<int> prev;
-    g.dijkstra(amb.node,dist,prev,true);
+    runDijkstra(amb.node,dist,prev,true);
     int best=-1;
     int count=hospitals.size();
     for(int i=0;i<count;i++){
@@ -302,3 +307,113 @@ void Simulation::run(){
         cout<<"stopped at the time limit, some incidents were never served"<<endl;
     }
 }
+//every dijkstra the simulation needs goes through here so the time can be added up
+void Simulation::runDijkstra(int src, vector<double>& dist, vector<int>& prev, bool useTraffic){
+    auto start=chrono::steady_clock::now();
+    g.dijkstra(src,dist,prev,useTraffic);
+    auto end=chrono::steady_clock::now();
+    algoNanos=algoNanos+chrono::duration_cast<chrono::nanoseconds>(end-start).count();
+}
+void Simulation::printResults(){
+    int n=incidents.size();
+    cout<<"incident\tnode\tseverity\tarrived\tsent\treached\tresponse\tambulance\tdelivered"<<endl;
+    for(int i=0;i<n;i++){
+        Incident& inc=incidents[i];
+        cout<<i+1<<"\t"<<g.getNode(inc.node).getName()<<"\t"<<inc.severity<<"\t";
+        if(inc.reachTime<0){
+            cout<<"never served"<<endl;
+            continue;
+        }
+        cout<<inc.arrivalTime<<"\t"<<inc.dispatchTime<<"\t"<<inc.reachTime<<"\t"<<inc.reachTime-inc.arrivalTime<<"\t"<<inc.ambulanceId<<"\t"<<inc.deliverTime<<endl;
+    }
+}
+//average minutes from the call to the ambulance arriving, only incidents with at least this severity
+double Simulation::avgResponse(int minSeverity){
+    double total=0;
+    int count=0;
+    int n=incidents.size();
+    for(int i=0;i<n;i++){
+        if(incidents[i].reachTime>=0 && incidents[i].severity>=minSeverity){
+            total=total+incidents[i].reachTime-incidents[i].arrivalTime;
+            count++;
+        }
+    }
+    if(count==0){
+        return -1;
+    }
+    return total/count;
+}
+double Simulation::maxResponse(){
+    double longest=-1;
+    int n=incidents.size();
+    for(int i=0;i<n;i++){
+        double response=incidents[i].reachTime-incidents[i].arrivalTime;
+        if(incidents[i].reachTime>=0 && response>longest){
+            longest=response;
+        }
+    }
+    return longest;
+}
+double Simulation::algoMicros(){
+    return algoNanos/1000.0;
+}
+void loadScenario(Simulation& sim, int number){
+    sim.addHospital(0);
+    if(number==1){
+        //light traffic, nothing goes wrong, all strategies should agree
+        sim.addAmbulance(3);
+        sim.addAmbulance(6);
+        sim.addEvent(0,NEW_INCIDENT,7,3,0);
+        sim.addEvent(10,NEW_INCIDENT,2,2,0);
+    }
+    else if(number==2){
+        //heavy congestion around station 2
+        sim.addAmbulance(3);
+        sim.addAmbulance(6);
+        sim.addEvent(0,SET_TRAFFIC,6,7,3.0);
+        sim.addEvent(0,SET_TRAFFIC,3,6,2.0);
+        sim.addEvent(0,SET_TRAFFIC,6,3,2.0);
+        sim.addEvent(0,NEW_INCIDENT,7,5,0);
+        sim.addEvent(1,NEW_INCIDENT,5,3,0);
+    }
+    else if(number==3){
+        //a road closes while the ambulance is on its way
+        sim.addAmbulance(0);
+        sim.addEvent(0,NEW_INCIDENT,7,5,0);
+        sim.addEvent(2,CLOSE_ROAD,6,7,0);
+    }
+    else if(number==4){
+        //four incidents at once, two ambulances
+        sim.addAmbulance(3);
+        sim.addAmbulance(6);
+        sim.addEvent(0,NEW_INCIDENT,7,2,0);
+        sim.addEvent(0,NEW_INCIDENT,2,5,0);
+        sim.addEvent(0,NEW_INCIDENT,5,3,0);
+        sim.addEvent(0,NEW_INCIDENT,1,4,0);
+    }
+    else if(number==5){
+        //a traffic jam appears after the ambulance has left
+        sim.addAmbulance(0);
+        sim.addEvent(0,NEW_INCIDENT,7,5,0);
+        sim.addEvent(1,SET_TRAFFIC,6,7,3.0);
+    }
+}
+//minutes the rest of a planned route takes right now, INF if a road on it is closed
+double Simulation::routeTime(const vector<int>& route){
+    double total=0;
+    int count=route.size();
+    for(int k=0;k+1<count;k++){
+        double road=INF;
+        for(const Edge& e: g.neighbours(route[k])){
+            if(e.getTo()==route[k+1] && !e.isBlocked()){
+                road=e.travelTime();
+            }
+        }
+        if(road>=INF){
+            return INF;
+        }
+        total=total+road;
+    }
+    return total;
+}
+

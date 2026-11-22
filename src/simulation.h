@@ -62,12 +62,15 @@ class Simulation{
     int ticks;
     double now;
     int reroutes;
+    long long algoNanos; //time spent inside dijkstra
     void showDistances(int index);
     int chooseAmbulance(int index, double& eta);
     void arrive(int a);
     void decideNextRoad(int a);
     void goToHospital(int a);
     void moveAmbulances();
+    double routeTime(const vector<int>& route);
+    void runDijkstra(int src, vector<double>& dist, vector<int>& prev, bool useTraffic);
     public:
     Simulation(const Graph& map, int s);
     void addAmbulance(int node);
@@ -78,6 +81,10 @@ class Simulation{
     void step();
     bool finished();
     void run();
+    void printResults();
+    double avgResponse(int minSeverity);
+    double maxResponse();
+    double algoMicros();
     //read only access for the gui
     const Graph& getGraph() const{
         return g;
@@ -103,5 +110,7 @@ class Simulation{
     const vector<int>& getHospitals() const{
         return hospitals;
     }
-
 };
+//fills a simulation with one of the test scenarios (1 to 5)
+void loadScenario(Simulation& sim, int number);
+ 
