@@ -194,50 +194,69 @@ void drawAmbulances(const Simulation& sim){
     }
 }
 void drawPanel(Simulation& sim){
-    int x=MAP_W+14;
+    int x=MAP_W+16;
     DrawLine(MAP_W,0,MAP_W,SCREEN_H,LIGHTGRAY);
-    drawText(TextFormat("strategy: %s",strategyNames[strategy].c_str()),x,14,20,BLACK);
-    drawText(TextFormat("time %.1f min    reroutes %d",sim.getNow(),sim.getReroutes()),x,42,18,DARKGRAY);
+
+    drawText(TextFormat("strategy: %s",strategyNames[strategy].c_str()),x,14,21,BLACK);
+    drawText(TextFormat("time %.1f min    reroutes %d",sim.getNow(),sim.getReroutes()),x,46,18,DARKGRAY);
+
     if(sim.finished()){
-        drawText("all incidents are done",x,68,18,DARKGREEN);
+        drawText("all incidents are done",x,78,19,DARKGREEN);
     }
     else if(paused){
-        drawText("paused",x,68,18,MAROON);
+        drawText("paused",x,78,19,MAROON);
     }
     else{
-        drawText(TextFormat("running, %d steps per second",speed),x,68,18,DARKGREEN);
+        drawText(TextFormat("running, %d steps per second",speed),x,78,19,DARKGREEN);
     }
-    drawText("space: run / pause     n: next decision",x,96,14,GRAY);
-    drawText("up / down: speed     d: pause at every decision",x,114,14,GRAY);
-    drawText("1 nearest   2 static   3 dynamic   r restart",x,132,14,GRAY);
-    drawText(TextFormat("tab: next scenario, now %d of 5",scenario),x,150,14,GRAY);
-    int y=182;
+
+    drawText("SPACE: run / pause    N: next decision",x,112,14,DARKGRAY);
+    drawText("UP / DOWN: speed    D: pause at decisions",x,136,14,DARKGRAY);
+    drawText("1: nearest   2: static   3: dynamic",x,160,14,DARKGRAY);
+    drawText(TextFormat("R: restart   TAB: scenario %d of 5",scenario),x,184,14,DARKGRAY);
+
+    int y=222;
+
     for(int i=0;i<sim.ambulanceCount();i++){
         const Ambulance& a=sim.getAmbulance(i);
-        drawText(TextFormat("A%d: %s",a.id,stateNames[a.state].c_str()),x,y,16,ambulanceColors[i%4]);
-        y=y+20;
+        drawText(TextFormat("A%d: %s",a.id,stateNames[a.state].c_str()),x,y,18,ambulanceColors[i%4]);
+        y=y+24;
     }
+
     y=y+12;
+
     if(decisionLines.size()==0){
-        drawText("press space to start, or n for the",x,y,16,DARKGRAY);
-        drawText("next decision",x,y+20,16,DARKGRAY);
+        drawText("press SPACE to start or N for the",x,y,17,DARKGRAY);
+        drawText("next decision",x,y+24,17,DARKGRAY);
     }
+
     for(int i=0;i<(int)decisionLines.size();i++){
         Color c=BLACK;
+
         if(decisionLines[i].find("chosen")!=string::npos){
             c=DARKGREEN;
         }
         if(decisionLines[i].find("REROUTE")!=string::npos){
             c=RED;
         }
-        drawText(decisionLines[i].c_str(),x,y,16,c);
-        y=y+22;
+
+        drawText(decisionLines[i].c_str(),x,y,17,c);
+        y=y+25;
     }
-    y=SCREEN_H-20-history.size()*18-24;
-    drawText("recent decisions",x,y,16,BLACK);
-    for(int i=0;i<(int)history.size();i++){
-        y=y+18;
-        drawText(history[i].c_str(),x,y+6,14,DARKGRAY);
+
+    int first=0;
+    if(history.size()>5){
+        first=history.size()-5;
+    }
+
+    int visible=history.size()-first;
+    y=SCREEN_H-24-visible*22-28;
+
+    drawText("recent decisions",x,y,17,BLACK);
+
+    for(int i=first;i<(int)history.size();i++){
+        y=y+22;
+        drawText(history[i].c_str(),x,y,14,DARKGRAY);
     }
 }
 //builds the table of options for ambulance i at the intersection it just reached
@@ -292,7 +311,7 @@ bool stepOnce(Simulation& sim){
     bool decided=false;
     for(int i=0;i<sim.ambulanceCount();i++){
         const Ambulance& a=sim.getAmbulance(i);
-        if(a.nextNode!=-1 && (prevNext[i]==-1 || a.node!=prevNode[i])){
+        if(a.nextNode!=-1 && (a.nextNode!=prevNext[i] || a.node!=prevNode[i])){
             double t=sim.getNow();
             if(a.node==prevNode[i]){
                 t=before; //it was just sent out, the decision came at the start of the step
@@ -388,8 +407,8 @@ int main(){
         if(IsKeyPressed(KEY_N) || IsKeyPressed(KEY_RIGHT)){
             runToNextDecision(sim);
         }
-        if(!paused && !sim.finished()){
-            stepTimer=stepTimer+GetFrameTime()*speed;
+        if(!paused && !sim.finished() && sim.getNow()<600){
+                stepTimer=stepTimer+GetFrameTime()*speed;
             while(stepTimer>=1 && !paused){
                 stepTimer=stepTimer-1;
                 if(stepOnce(sim) && pauseAtDecision){
